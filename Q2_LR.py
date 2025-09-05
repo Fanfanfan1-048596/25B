@@ -9,6 +9,12 @@ def read_spectrum(path):
     R_vals = pd.to_numeric(df['反射率 (%)'], errors='coerce').to_numpy()
     mask = ~(np.isnan(nu_vals) | np.isnan(R_vals))
     nu, R = nu_vals[mask], R_vals[mask]
+    
+    # 对附件1和附件2，只使用波数>1500的数据
+    if '附件1' in path or '附件2' in path:
+        wavenumber_mask = nu > 2000
+        nu, R = nu[wavenumber_mask], R[wavenumber_mask]
+    
     order = np.argsort(nu)
     return nu[order], R[order] / 100.0
 
@@ -48,7 +54,20 @@ def joint_fit_two_angles(X1, M1, X2, M2):
     aic = len(M)*log(sse/len(M)) + 6 if sse > 0 else -np.inf
     return d_cm, b1, b2, sse, aic, se_d_cm, len(M), 3
 
-extract_peaks = lambda nu, R, prominence=0.002, distance=10: np.sort(nu[find_peaks(R, prominence=prominence, distance=distance)[0]])
+def filter_peaks_by_distance(peaks, min_distance=200):
+    """根据最小距离过滤峰值"""
+    if len(peaks) <= 1:
+        return peaks
+    
+    filtered_peaks = [peaks[0]]  # 保留第一个峰值
+    
+    for peak in peaks[1:]:
+        if peak - filtered_peaks[-1] >= min_distance:
+            filtered_peaks.append(peak)
+    
+    return np.array(filtered_peaks)
+
+extract_peaks = lambda nu, R, prominence=0.002, distance=10: filter_peaks_by_distance(np.sort(nu[find_peaks(R, prominence=prominence, distance=distance)[0]]), min_distance=200)
 
 def fit_one_angle(path, theta_deg, n2_fn, prominence, distance):
     nu, R = read_spectrum(path)

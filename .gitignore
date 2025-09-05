@@ -8,3 +8,6 @@ paper/
 *.out
 *.synctex.gz
 .DS_Store
+*.md
+*.png
+Q3_FP.py
