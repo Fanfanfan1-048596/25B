@@ -1,0 +1,10 @@
+__pycache__/
+paper/
+思路.*
+问题一二.*
+*.pyc
+*.aux
+*.log
+*.out
+*.synctex.gz
+.DS_Store
